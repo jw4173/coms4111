@@ -1,0 +1,30 @@
+<html>
+
+<link rel="stylesheet" href="../static/style.css" type="text/css">
+
+<div class = "login">
+<div class="login-screen">
+<form action="/login" method="POST">
+	<div class="app-title">
+		<h1>Login</h1>
+	</div>
+	<div class="login-form">
+		<div class="control-group">
+			<input type="text" class="login-field" value="" placeholder="email" name="username">
+		<label class="login-field-icon fui-user" for="login-name"></label></div>
+		<div class="control-group">
+			<input type="password" class="login-field" value="" placeholder="password" name="password">
+		<label class="login-field-icon fui-lock" for="login-pass"></label></div>
+		<input type="submit" value="Log in" class="btn btn-primary btn-large btn-block">
+	</div>
+</form>
+<hr>
+<form action="/create_account" method="POST">
+	<div class="app-title-1">
+		<p class="text-1">If no account:</p>
+		<input type="submit" value="Create Account" class="btn btn-primary btn-large btn-block">
+	</div>
+</form>
+</div>
+</div>
+</html>
