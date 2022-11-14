@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import Flask, flash, redirect, render_template, request, session, abort
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response, url_for
 import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
@@ -14,16 +14,20 @@ DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/proj1part2
 engine = create_engine(DATABASEURI)
 ######################################################
 
+message = ""
 @app.route('/')
 def home():
+    global message
     if not session.get('logged_in'):
-        return render_template('login.html')
+        context = dict(warning_message = message)
+        return render_template('login.html', **context)
     else:
         return another()
 
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
+    global message
     username = request.form['username']
     password = request.form['password']
     print(username, password)
@@ -36,8 +40,10 @@ def do_admin_login():
     
     if count == 1:
         session['logged_in'] = True
+        message = ""
     else:
         flash('wrong password!')
+        message ='wrong password or email!'
     return redirect('/')
 
 @app.route("/create_account", methods=['POST'])
