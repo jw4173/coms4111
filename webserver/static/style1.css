@@ -8,11 +8,9 @@ outline: none;
 body {
 font-family: Arial;
 background-color: #3498DB;
-padding: 50px;
 }
 .login {
-margin: 20px auto;
-width: 300px;
+width: 1500px;
 }
 .login-screen {
 background-color: #FFF;
@@ -26,10 +24,17 @@ color: #777;
 }
 
 .login-form {
-text-align: center;
+    width: 900px;
 }
+
+.login-btn {
+    text-align: right;
+    width: 900px;
+}
+
 .control-group {
-margin-bottom: 10px;
+    text-align: right;
+    margin-bottom: 10px;
 }
 
 input {

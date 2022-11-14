@@ -85,3 +85,20 @@ margin-top: 12px;
     font-size: 15pt;
 	font-family: arial;
 }
+
+.home-page {
+    width: 1300px;
+    height: 800px;
+    margin: 0px auto;
+    border-radius: 5px; 
+    display:inline-block;
+}
+
+.home-btn {
+    margin: 10px auto;
+}
+
+.menu {
+    text-align: center;
+    align-items: center;
+}

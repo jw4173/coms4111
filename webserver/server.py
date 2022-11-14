@@ -14,12 +14,12 @@ DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/proj1part2
 engine = create_engine(DATABASEURI)
 ######################################################
 
-message = ""
+warning_message = ""
 @app.route('/')
 def home():
-    global message
+    global warning_message
     if not session.get('logged_in'):
-        context = dict(warning_message = message)
+        context = dict(warning_message = warning_message)
         return render_template('login.html', **context)
     else:
         return another()
@@ -27,7 +27,7 @@ def home():
 
 @app.route('/login', methods=['POST'])
 def do_admin_login():
-    global message
+    global warning_message
     username = request.form['username']
     password = request.form['password']
     print(username, password)
@@ -40,15 +40,43 @@ def do_admin_login():
     
     if count == 1:
         session['logged_in'] = True
-        message = ""
+        warning_message = ""
     else:
         flash('wrong password!')
-        message ='wrong password or email!'
+        warning_message ='wrong password or email!'
     return redirect('/')
 
 @app.route("/create_account", methods=['POST'])
 def create_account():
     return render_template('create_account.html')
+
+
+@app.route("/sign_up", methods=['POST'])
+def sign_up():
+    email = request.form['email']
+    username = request.form['username']
+    password = request.form['password']
+    zipcode = request.form['zipcode']
+    description = request.form['description']
+    # get max id
+    cmd = 'SELECT MAX(user_id) FROM Users'
+    cursor = g.conn.execute(text(cmd))
+    max_id = next(cursor)[0]
+    print(max_id)
+    # check whether email exist
+    cmd = 'SELECT COUNT(*) FROM Users WHERE email=(:email)'
+    cursor = g.conn.execute(text(cmd), email=email)
+    count = next(cursor)[0]
+    if email and username and password and zipcode and description and count==0:
+        print(email, username, password, zipcode, description)
+        cmd = 'INSERT INTO Users VALUES ((:max_id), (:zipcode), (:email), (:username), (:password), (:description))'
+        g.conn.execute(text(cmd), max_id=max_id+1, zipcode=int(zipcode), email=email, username=username, password=password, description=description)
+        session['logged_in'] = True
+        return redirect('/')
+    else:
+        context = dict(warning_message = 'already used email or missing information')
+        return render_template('create_account.html', **context)
+
 
 @app.route("/logout", methods=['POST'])
 def logout():
@@ -56,9 +84,25 @@ def logout():
     return redirect('/')
 
 
-@app.route('/another')
+@app.route('/add_app', methods=['POST'])
+def add_app():
+    return render_template("add_app.html")
+
+@app.route('/find_app', methods=['POST'])
+def find_app():
+    return render_template("find_app.html")
+
+@app.route('/find_roommate', methods=['POST'])
+def find_roommate():
+    return render_template("find_roommate.html")
+
+@app.route('/message', methods=['POST'])
+def message():
+    return render_template("message.html")
+
+@app.route('/basic_info', methods=['POST'])
 def another():
-  return render_template("anotherfile.html")
+    return render_template("home-page.html")
 
 
 @app.before_request

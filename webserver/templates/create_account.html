@@ -1,1 +1,37 @@
-"hello"
+<html>
+
+<link rel="stylesheet" href="../static/style1.css" type="text/css">
+
+<div class = "login">
+    <div class="login-screen">
+        <div class="app-title">
+            <h1>Create Account</h1>
+        </div>
+        <form action="/sign_up" method="POST">
+            <div class="login-form">
+                <div class="control-group">
+                    <p>E-mail: <input type="text" class="login-field" value="" placeholder="email" name="email"> </p> 
+                </div>
+                
+                <div class="control-group">
+                    <p>username: <input type="text" class="login-field" value="" placeholder="username" name="username"> </p>
+                </div>
+                
+                <div class="control-group">
+                    <p>password: <input type="password" class="login-field" value="" placeholder="password" name="password"> </p>
+                </div>
+                
+                <div class="control-group">
+                    <p> zip code: <input type="text" class="login-field" value="" placeholder="zip code" name="zipcode"> </p>
+                </div>
+
+                <div class="control-group">
+                    <p> Description: <input type="text" class="login-field" value="" placeholder="description" name="description"></p>
+                </div>
+            </div>
+            <input type="submit" value="sign up" class="btn btn-primary btn-large btn-block">
+        </form>
+        <div class="app-title"> {{warning_message}}</div>
+    </div>
+</div>
+</html>
