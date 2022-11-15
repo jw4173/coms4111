@@ -5,6 +5,7 @@
 <div class = "home-menu" style="width:20%;float:left;background-color:rgb(230, 228, 228);height: 800px;">
     <div class="app-title">
         <h1>Menu Button</h1>
+        <p> Hello, Dear user {{userid}}</p>
     </div>
     <div>
         <form action="/basic_info" method="POST">
@@ -38,6 +39,25 @@
     </div>
 
 </div>
-<div style="width: 80%;float:right;background-color:aquamarine;height: 800px;"> </div>
+<div style="width: 80%;float:right;background-color:aquamarine;height: 800px;"> 
+    <div class = "show-context">
+        <div> <strong><em>User Id: </em></strong> {{userid}}</div>
+        <div> <strong><em>email: </em></strong> {{email}}</div>
+        <div> <strong><em>password: </em></strong> {{password}}</div>
+        <div> <strong><em>username: </em></strong> {{username}}</div>
+        <div> <strong><em>zipcode: </em></strong> {{zip_code}}</div>
+        <div> <strong><em>description: </em></strong> {{description}}</div>
+    </div>
+    <hr class="home_hr">
+    <form action="/update_info" method="POST">
+        <div class = "submit-context">
+            <p><strong>username:</strong> <input type="text" class="login-field" value="" placeholder="username" name="username"> </p>
+            <p><strong>password:</strong> <input type="password" class="login-field" value="" placeholder="password" name="password"> </p>
+            <p><strong>zip code:</strong> <input type="text" class="login-field" value="" placeholder="zip code" name="zipcode"> </p>
+            <p><strong>Description:</strong> <input type="text" class="login-field" value="" placeholder="description" name="description"></p>
+            <input type="submit" value="update info" class="btn btn-primary btn-large btn-block">
+        </div>
+    </form>
+</div>
 
 </html>

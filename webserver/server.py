@@ -36,10 +36,13 @@ def do_admin_login():
     cursor = g.conn.execute(text(cmd), username=username, password=password)
     count = 0
     for i in cursor:
+        userid = i['user_id']
+        print(userid)
         count += 1
     
     if count == 1:
         session['logged_in'] = True
+        session['userid'] = userid
         warning_message = ""
     else:
         flash('wrong password!')
@@ -72,38 +75,129 @@ def sign_up():
         cmd = 'INSERT INTO Users VALUES ((:max_id), (:zipcode), (:email), (:username), (:password), (:description))'
         g.conn.execute(text(cmd), max_id=max_id+1, zipcode=int(zipcode), email=email, username=username, password=password, description=description)
         session['logged_in'] = True
+        session['userid'] = max_id+1
         return redirect('/')
     else:
         context = dict(warning_message = 'already used email or missing information')
         return render_template('create_account.html', **context)
 
 
-@app.route("/logout", methods=['POST'])
+@app.route("/logout", methods=['POST', 'GET'])
 def logout():
     session['logged_in'] = False
+    session['userid'] = 0
     return redirect('/')
 
 
-@app.route('/add_app', methods=['POST'])
+@app.route('/add_app', methods=['POST', 'GET'])
 def add_app():
+    if not session.get('logged_in'):
+        return redirect('/')
     return render_template("add_app.html")
 
-@app.route('/find_app', methods=['POST'])
+@app.route('/find_app', methods=['POST', 'GET'])
 def find_app():
-    return render_template("find_app.html")
+    if not session.get('logged_in'):
+        return redirect('/')
+    cmd = 'SELECT * FROM Location'
+    cursor = g.conn.execute(text(cmd))
+    array = []
+    for i in cursor:
+        zipcode = str(i['zip_code'])
+        country = i['country']
+        state = i['state']
+        city = i['city']
+        array.append(country + ", " + state + ", " + city + ", " + zipcode)
+    array.sort()
+    cursor.close()
+    
+    array2 = []
+    if session.get('apt_zipcode'):
+        zipcode_tmp = session.get('apt_zipcode')
+        cmd = 'SELECT * FROM Apartment_in WHERE zip_code=(:zipcode)'
+        cursor = g.conn.execute(text(cmd), zipcode=zipcode_tmp)
+        for i in cursor:
+            apartment_id = str(i['apartment_id'])
+            zip_code = str(i['zip_code'])
+            name = i['name']
+            array2.append(apartment_id + ", " + zip_code + ", " + name)
+        array2.sort()
+        cursor.close()
+    if session.get('userid'):
+        context = dict(data = array, data2 = array2, userid=session.get('userid'))
+    else:
+        context = dict(data = array, data2 = array2)
+    print(array)
+    return render_template("find_app.html", **context)
 
-@app.route('/find_roommate', methods=['POST'])
+@app.route('/find_app_zipcode', methods=['POST', 'GET'])
+def find_app_zipcode():
+    if request.form['zipcode']:
+        session['apt_zipcode'] = request.form['zipcode']
+    return redirect('/find_app')
+
+@app.route('/interest_app', methods=['POST', 'GET'])
+def interest_app():
+    if request.form['apartment_id'] and session.get('userid') and session.get('apt_zipcode'):
+        cmd = 'INSERT INTO interest VALUES ((:user_id), (:apartment_id));'
+        g.conn.execute(text(cmd), user_id=session.get('userid'), apartment_id = request.form['apartment_id'])
+    return redirect('/find_app')
+
+@app.route('/find_roommate', methods=['POST', 'GET'])
 def find_roommate():
+    if not session.get('logged_in'):
+        return redirect('/')
     return render_template("find_roommate.html")
 
-@app.route('/message', methods=['POST'])
+@app.route('/message', methods=['POST', 'GET'])
 def message():
+    if not session.get('logged_in'):
+        return redirect('/')
     return render_template("message.html")
 
-@app.route('/basic_info', methods=['POST'])
+@app.route('/basic_info', methods=['POST', 'GET'])
 def another():
-    return render_template("home-page.html")
+    if not session.get('logged_in'):
+        return redirect('/')
+    userid = 0
+    if session.get('userid'):
+        userid = session.get('userid')
+    cmd = 'SELECT * FROM Users WHERE user_id=(:userid)'
+    cursor = g.conn.execute(text(cmd), userid=userid)
+    
+    element = next(cursor)
+    zip_code = element[1]
+    email = element[2]
+    username = element[3]
+    password = element[4]
+    description = element[5]
+    print(zip_code, email, username, password, description)
+    context = dict(userid = userid, zip_code = zip_code, email = email, username=username, password=password, description=description)
 
+    return render_template("home-page.html", **context)
+
+
+@app.route('/update_info', methods=['POST'])
+def update_info():
+    username = request.form['username']
+    password = request.form['password']
+    zipcode = request.form['zipcode']
+    description = request.form['description']
+    userid = session.get('userid')
+    if username:
+        cmd = 'UPDATE Users SET username=(:username) WHERE user_id=(:userid)'
+        g.conn.execute(text(cmd), username=username, userid=userid)
+    if password:
+        cmd = 'UPDATE Users SET password=(:password) WHERE user_id=(:userid)'
+        g.conn.execute(text(cmd), password=password, userid=userid)
+    if zipcode:
+        cmd = 'UPDATE Users SET zip_code=(:zip_code) WHERE user_id=(:userid)'
+        g.conn.execute(text(cmd), zip_code=zipcode, userid=userid)
+    if description:
+        cmd = 'UPDATE Users SET personal_info=(:description) WHERE user_id=(:userid)'
+        g.conn.execute(text(cmd), description=description, userid=userid)
+    print(userid, username, password, zipcode, description)
+    return redirect('/basic_info')
 
 @app.before_request
 def before_request():

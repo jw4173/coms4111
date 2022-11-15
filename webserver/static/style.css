@@ -102,3 +102,30 @@ margin-top: 12px;
     text-align: center;
     align-items: center;
 }
+
+.show-context {
+    margin: 20px;
+    text-align: center;
+    color: rgb(58, 56, 56);
+    font-family: Arial;
+    font-size: xx-large;
+}
+
+.show-context-1 {
+    text-align: center;
+    color: rgb(58, 56, 56);
+    font-family: Arial;
+    font-size: large;
+    height: 400px;
+}
+
+.home_hr {
+    border: 10px solid green;
+    border-radius: 5px;
+}
+
+.submit-context {
+    text-align: center;
+    font-size: large;
+    font-family: 'Courier New', Courier, monospace;
+}
