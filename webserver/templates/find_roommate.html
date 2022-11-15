@@ -5,6 +5,7 @@
 <div class = "home-menu" style="width:20%;float:left;background-color:rgb(230, 228, 228);height: 800px;">
     <div class="app-title">
         <h1>Menu Button</h1>
+        <p> Hello, Dear user {{userid}}</p>
     </div>
     <div>
         <form action="/basic_info" method="POST">
@@ -22,13 +23,13 @@
         </form>
     </div>
     <div>
-        <form action="/find_roommate" method="POST">
-            <input type="submit" value="Find Roommate" class="btn btn-primary btn-large btn-block home-btn">       
+        <form action="/post_comment" method="POST">
+            <input type="submit" value="Post & Comment" class="btn btn-primary btn-large btn-block home-btn">       
         </form>
     </div>
     <div>
-        <form action="/post_comment" method="POST">
-            <input type="submit" value="Post & Comment" class="btn btn-primary btn-large btn-block home-btn">       
+        <form action="/find_roommate" method="POST">
+            <input type="submit" value="Find Roommate" class="btn btn-primary btn-large btn-block home-btn">       
         </form>
     </div>
     <div>
@@ -43,6 +44,45 @@
     </div>
 
 </div>
-<div style="width: 80%;float:right;background-color:aquamarine;height: 800px;"> </div>
+<div style="width: 80%;float:right;background-color:rgb(192, 235, 220);height: 800px;">
+    <div class="app-title">
+        <h1>Send and See Message</h1>
+    </div>
+    <div class = "show-context-1" style="width: 50%;float:left;">
+        <div class="app-title">
+            <h3>Interest Apt list</h3>
+        </div>
+        {% for n in data %}
+            <div>{{n}}</div>
+        {% endfor %}
+    </div>
+    <div class = "show-context-1" style="width: 50%;float:right;">
+        <div class="app-title">
+            <h3>User List</h3>
+        </div>
+        {% for n in data2 %}
+            <div>{{n}}</div>
+        {% endfor %}
+    </div>
+    <hr class="home_hr">
+    <div style="width: 50%;float:left;">
+        <form action="/show_user" method="POST">
+            <div class = "submit-context">
+                <p><strong>Show User:</strong></p> <input type="text" class="login-field" value="" placeholder="apartment_id" name="apartment_id">
+                <input type="submit" value="Show User" class="btn btn-primary btn-large btn-block">
+            </div>
+        </form>
+    </div>
+    <div style="width: 50%;float:right;">
+        <form action="/send_message_user" method="POST">
+            <div class = "submit-context">
+                <p><strong>Send Comment:</strong> </p>
+                <div style="margin:5px"><input type="text" class="login-field" value="" placeholder="message" name="message"></div>
+                <div><input type="text" class="login-field" value="" placeholder="user_id" name="user_id"></div>
+                <input type="submit" value="Send Message" class="btn btn-primary btn-large btn-block">
+            </div>
+        </form>
+    </div>    
+</div>
 
 </html>

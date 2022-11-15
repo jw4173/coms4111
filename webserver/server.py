@@ -94,7 +94,51 @@ def logout():
 def add_app():
     if not session.get('logged_in'):
         return redirect('/')
-    return render_template("add_app.html")
+    if session.get('userid'):
+        context = dict(userid=session.get('userid'))
+    return render_template("add_app.html", **context)
+
+
+@app.route('/confirm', methods=['POST'])
+def confirm_add_app():
+   global warning_message1
+   zipcode = request.form['zipcode']
+   cmd = 'SELECT * FROM Location WHERE zip_code=(:zipcode)'
+   cursor = g.conn.execute(text(cmd), zipcode=zipcode)
+   count = 0
+   for j in cursor:
+       count += 1
+   if zipcode and count == 0:
+       country = request.form['country']
+       state = request.form['state']
+       city = request.form['city']
+       apartment = request.form['apartment_name']
+       if country and state and city and apartment:
+           cmd = 'INSERT INTO Location VALUES ((:zip_code), (:country), (:state), (:city))'
+           g.conn.execute(text(cmd), zip_code=int(zipcode), country=country, state=state, city=city)
+           cmd = 'SELECT MAX(apartment_id) FROM Apartment_in'
+           cursor = g.conn.execute(text(cmd))
+           max_id = next(cursor)[0]
+           cmd = 'INSERT INTO Apartment_in VALUES ((:max_id), (:zip_code), (:name))'
+           g.conn.execute(text(cmd), max_id=max_id + 1, zip_code=int(zipcode), name=apartment)
+           return render_template("add_app.html")
+   else:
+       apartment = request.form['apartment_name']
+       cmd = 'SELECT * FROM Apartment_in WHERE name=(:apartment) AND zip_code=(:zip_code)'
+       cursor = g.conn.execute(text(cmd), apartment=apartment, zip_code=zipcode)
+       count = 0
+       for i in cursor:
+           count += 1
+       if apartment and count == 1:
+           context = dict(warning_message1='apartment already exists')
+           return render_template("add_app.html", **context)
+       else:
+           cmd = 'SELECT MAX(apartment_id) FROM Apartment_in'
+           cursor = g.conn.execute(text(cmd))
+           max_id = next(cursor)[0]
+           cmd = 'INSERT INTO Apartment_in VALUES ((:max_id), (:zip_code), (:name))'
+           g.conn.execute(text(cmd), max_id=max_id + 1, zip_code=int(zipcode), name=apartment)
+           return render_template("add_app.html")
 
 
 @app.route('/find_app', methods=['POST', 'GET'])
@@ -152,14 +196,172 @@ def interest_app():
 def find_roommate():
     if not session.get('logged_in'):
         return redirect('/')
-    return render_template("find_roommate.html")
+    userid = session.get('userid')
+    # show apartment
+    cmd = 'SELECT * FROM interest WHERE user_id=(:user_id)'
+    cursor = g.conn.execute(text(cmd), user_id=userid)
+    array = []
+    for i in cursor:
+        array.append(i['apartment_id'])
+    cursor.close()
+    array.sort()
+    name = []
+    for i in array:
+        cmd = 'SELECT name FROM Apartment_in WHERE apartment_id=(:apartment_id)'
+        cursor = g.conn.execute(text(cmd), apartment_id=i)
+        name.append(str(i) + ": " + next(cursor)[0])
+        cursor.close()
+    
+    # show user
+    array2 = []
+    name2 = []
+    if session.get('apartment_id_user'):
+        cmd = 'SELECT * FROM interest WHERE apartment_id=(:apartment_id)'
+        cursor = g.conn.execute(text(cmd), apartment_id=session.get('apartment_id_user'))
+        for i in cursor:
+            if i['user_id'] != userid:
+                array2.append(i['user_id'])
+        cursor.close()
+        array2.sort()
+        
+        for i in array2:
+            cmd = 'SELECT * FROM Users WHERE user_id=(:user_id)'
+            cursor = g.conn.execute(text(cmd), user_id=i)
+            for i in cursor:
+                name2.append(str(i['user_id']) + " " + i['email'] + ": " + i['personal_info'])
+    if session.get('apartment_id_user'):
+        context = dict(data = name, data2 = name2)
+    else:
+        context = dict(data = name)
+    if session.get('userid'):
+        context['userid']=session.get('userid') 
+    return render_template("find_roommate.html", **context)
+
+
+@app.route('/show_user', methods=['POST', 'GET'])
+def show_user():
+    if request.form['apartment_id']:
+        session['apartment_id_user'] = request.form['apartment_id']
+    return redirect('/find_roommate')
+
+
+@app.route('/send_message_user', methods=['POST', 'GET'])
+def send_message_user():
+    if request.form['message'] and session.get('userid') and request.form['user_id']:
+        # find max message id
+        cmd = 'SELECT MAX(message_id) FROM Message_Send_Receive'
+        cursor = g.conn.execute(text(cmd))
+        max_message_id = next(cursor)[0]+1
+        cursor.close()
+        cmd = 'INSERT INTO Message_Send_Receive VALUES ((:message_id), (:user_id), (:to_id), (:context));'
+        g.conn.execute(text(cmd), message_id=max_message_id, user_id = session.get('userid'), to_id=request.form['user_id'], context=request.form['message'])
+    return redirect('/find_roommate')
 
 
 @app.route('/post_comment', methods=['POST', 'GET'])
 def post_comment():
     if not session.get('logged_in'):
         return redirect('/')
-    return render_template("post_comment.html")
+    userid = session.get('userid')
+    # show apartment
+    cmd = 'SELECT * FROM interest WHERE user_id=(:user_id)'
+    cursor = g.conn.execute(text(cmd), user_id=userid)
+    array = []
+    for i in cursor:
+        array.append(i['apartment_id'])
+    cursor.close()
+    array.sort()
+    name = []
+    for i in array:
+        cmd = 'SELECT name FROM Apartment_in WHERE apartment_id=(:apartment_id)'
+        cursor = g.conn.execute(text(cmd), apartment_id=i)
+        name.append(str(i) + ": " + next(cursor)[0])
+        cursor.close()
+    # show post
+    array2 = []
+    name2 = []
+    if session.get('apartment_id_post'):
+        cmd = 'SELECT * FROM Post_u_a WHERE apartment_id=(:apartment_id)'
+        cursor = g.conn.execute(text(cmd), apartment_id=session.get('apartment_id_post'))
+        for i in cursor:
+            array2.append((i['post_id'], i['user_id'], i['context']))
+        cursor.close()
+        array2.sort(key=lambda a: a[0])
+        
+        for i in array2:
+            name2.append(str(i[0]) + ". " + str(i[1]) + ": " + i[2])
+            
+    # show comment
+    array3 = []
+    name3 = []
+    if session.get('apartment_id_post') and session.get('post_id_post'):
+        cmd = 'SELECT * FROM Comment_u_p WHERE apartment_id_post=(:apartment_id_post) AND post_id=(:post_id)'
+        cursor = g.conn.execute(text(cmd), apartment_id_post=session.get('apartment_id_post'), post_id=session.get('post_id_post'))
+        for i in cursor:
+            array3.append((i['comment_id'], i['user_id'], i['description']))
+        cursor.close()
+        array3.sort(key=lambda a: a[0])
+        
+        for i in array3:
+            name3.append(str(i[0]) + ". " + str(i[1]) + ": " + i[2])
+     
+    if session.get('apartment_id_post') and session.get('post_id_post'):
+        context = dict(data = name, data2 = name2, data3 = name3)        
+    elif session.get('apartment_id_post'):
+        context = dict(data = name, data2 = name2)
+    else:
+        context = dict(data = name)
+    if session.get('userid'):
+        context['userid']=session.get('userid') 
+    return render_template("post_comment.html", **context)
+
+
+@app.route('/send_post', methods=['POST', 'GET'])
+def send_post():
+    if request.form['message'] and session.get('userid') and session.get('apartment_id_post'):
+        # find max message id
+        cmd = 'SELECT MAX(post_id) FROM Post_u_a'
+        cursor = g.conn.execute(text(cmd))
+        max_message_id = next(cursor)[0]+1
+        cursor.close()
+        cmd = 'INSERT INTO Post_u_a VALUES ((:post_id), (:context), (:user_id), (:apartment_id));'
+        g.conn.execute(text(cmd), post_id=max_message_id, context = request.form['message'], user_id=session.get('userid'), apartment_id=session.get('apartment_id_post'))
+    return redirect('/post_comment')
+
+
+@app.route('/send_comment', methods=['POST', 'GET'])
+def send_comment():
+    if request.form['message'] and session.get('userid') and session.get('apartment_id_post') and session.get('post_id_post'):
+        # find max message id
+        cmd = 'SELECT MAX(comment_id) FROM Comment_u_p'
+        cursor = g.conn.execute(text(cmd))
+        max_message_id = next(cursor)[0]+1
+        cursor.close()
+        
+        # get user_id
+        cmd = 'SELECT user_id FROM Post_u_a WHERE post_id=(:post_id)'
+        cursor = g.conn.execute(text(cmd), post_id=session.get('post_id_post'))
+        user_id_post = next(cursor)[0]
+        cursor.close()
+        
+        cmd = 'INSERT INTO Comment_u_p VALUES ((:comment_id), (:description), (:user_id), (:post_id), (:user_id_post), (:apartment_id_post));'
+        g.conn.execute(text(cmd), comment_id=max_message_id, description = request.form['message'], user_id=session.get('userid'), post_id=session.get('post_id_post'), user_id_post=user_id_post, apartment_id_post=session.get('apartment_id_post'))
+    return redirect('/post_comment')
+
+
+@app.route('/show_post', methods=['POST', 'GET'])
+def show_post():
+    if request.form['apartment_id']:
+        session['post_id_post'] = 0
+        session['apartment_id_post'] = request.form['apartment_id']
+    return redirect('/post_comment')
+
+
+@app.route('/show_comment', methods=['POST', 'GET'])
+def show_comment():
+    if request.form['post_id'] and session.get('apartment_id_post'):
+        session['post_id_post'] = request.form['post_id']
+    return redirect('/post_comment')
 
 
 @app.route('/message', methods=['POST', 'GET'])

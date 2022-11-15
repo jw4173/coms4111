@@ -5,6 +5,7 @@
 <div class = "home-menu" style="width:20%;float:left;background-color:rgb(230, 228, 228);height: 800px;">
     <div class="app-title">
         <h1>Menu Button</h1>
+        <p> Hello, Dear user {{userid}}</p>
     </div>
     <div>
         <form action="/basic_info" method="POST">
@@ -22,13 +23,13 @@
         </form>
     </div>
     <div>
-        <form action="/find_roommate" method="POST">
-            <input type="submit" value="Find Roommate" class="btn btn-primary btn-large btn-block home-btn">       
+        <form action="/post_comment" method="POST">
+            <input type="submit" value="Post & Comment" class="btn btn-primary btn-large btn-block home-btn">       
         </form>
     </div>
     <div>
-        <form action="/post_comment" method="POST">
-            <input type="submit" value="Post & Comment" class="btn btn-primary btn-large btn-block home-btn">       
+        <form action="/find_roommate" method="POST">
+            <input type="submit" value="Find Roommate" class="btn btn-primary btn-large btn-block home-btn">       
         </form>
     </div>
     <div>
@@ -43,6 +44,17 @@
     </div>
 
 </div>
-<div style="width: 80%;float:right;background-color:aquamarine;height: 800px;"> </div>
+<div style="width: 80%;float:right;background-color:rgb(192, 235, 220);height: 800px;text-align: center;padding:100px">
+    <form action="/confirm" method="POST">
+            <p><input type="text" class="login-field" value="" placeholder="zipcode" name="zipcode"></p>
+            <p><input type="text" class="login-field" value="" placeholder="country" name="country"></p>
+            <p><input type="text" class="login-field" value="" placeholder="state" name="state"></p>
+            <p><input type="text" class="login-field" value="" placeholder="city" name="city"></p>
+            <p><input type="text" class="login-field" value="" placeholder="apartment_name" name="apartment_name"></p>
+            <p><input type="submit" value="Confirm Add" class="btn btn-primary btn-large btn-block home-btn"></p>
+    </form>
+    <div>{{warning_message}}</div>
+ </div>
+ 
 
 </html>
