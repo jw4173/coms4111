@@ -49,6 +49,7 @@ def do_admin_login():
         warning_message ='wrong password or email!'
     return redirect('/')
 
+
 @app.route("/create_account", methods=['POST'])
 def create_account():
     return render_template('create_account.html')
@@ -95,6 +96,7 @@ def add_app():
         return redirect('/')
     return render_template("add_app.html")
 
+
 @app.route('/find_app', methods=['POST', 'GET'])
 def find_app():
     if not session.get('logged_in'):
@@ -130,11 +132,13 @@ def find_app():
     print(array)
     return render_template("find_app.html", **context)
 
+
 @app.route('/find_app_zipcode', methods=['POST', 'GET'])
 def find_app_zipcode():
     if request.form['zipcode']:
         session['apt_zipcode'] = request.form['zipcode']
     return redirect('/find_app')
+
 
 @app.route('/interest_app', methods=['POST', 'GET'])
 def interest_app():
@@ -142,6 +146,7 @@ def interest_app():
         cmd = 'INSERT INTO interest VALUES ((:user_id), (:apartment_id));'
         g.conn.execute(text(cmd), user_id=session.get('userid'), apartment_id = request.form['apartment_id'])
     return redirect('/find_app')
+
 
 @app.route('/find_roommate', methods=['POST', 'GET'])
 def find_roommate():
@@ -153,7 +158,64 @@ def find_roommate():
 def message():
     if not session.get('logged_in'):
         return redirect('/')
-    return render_template("message.html")
+    array = set()
+    if session.get('userid'):
+        cmd = 'SELECT DISTINCT to_id FROM Message_Send_Receive WHERE user_id=(:user_id)'
+        cursor = g.conn.execute(text(cmd), user_id=session.get('userid'))
+        for i in cursor:
+            array.add(i['to_id'])
+        cursor.close()
+        
+        cmd = 'SELECT DISTINCT user_id FROM Message_Send_Receive WHERE to_id=(:to_id)'
+        cursor = g.conn.execute(text(cmd), to_id = session.get('userid'))
+        for i in cursor:
+            array.add(i['user_id'])
+        cursor.close()
+    array = list(array)
+    array.sort()
+    # add username according to userid
+    name = []
+    for i in array:
+        cmd = 'SELECT email FROM Users WHERE user_id=(:user_id)'
+        cursor = g.conn.execute(text(cmd), user_id = i)
+        for j in cursor:
+            name.append(str(i) + ", " + j['email'])
+        cursor.close()
+    
+    # show message
+    array2 = []
+    name2 = []
+    if session.get('user_id_message'):
+        other_id = session.get('user_id_message')
+        cmd = 'SELECT * FROM Message_Send_Receive WHERE user_id=(:user_id) AND to_id=(:to_id)'
+        cursor = g.conn.execute(text(cmd), user_id=session.get('userid'), to_id=other_id)
+        for i in cursor:
+            array2.append((i['message_id'], i['user_id'], i['context']))
+        cursor.close()
+        
+        cmd = 'SELECT * FROM Message_Send_Receive WHERE user_id=(:user_id) AND to_id=(:to_id)'
+        cursor = g.conn.execute(text(cmd), user_id=other_id, to_id=session.get('userid'))
+        for i in cursor:
+            array2.append((i['message_id'], i['user_id'], i['context']))
+        cursor.close()
+        array2.sort(key=lambda a: a[0])
+        
+        for i in array2:
+            name2.append(str(i[1]) + ": " + i[2])
+        
+    if session.get('userid'):
+        context = dict(data = name, data2 = name2, userid=session.get('userid'))
+    else:
+        context = dict(data = name, data2 = name2)
+        
+    return render_template("message.html", **context)
+
+
+@app.route('/show_message', methods=['POST', 'GET'])
+def show_message():
+    if request.form['user_id']:
+        session['user_id_message'] = request.form['user_id']
+    return redirect('/message')
 
 @app.route('/basic_info', methods=['POST', 'GET'])
 def another():
@@ -199,6 +261,7 @@ def update_info():
     print(userid, username, password, zipcode, description)
     return redirect('/basic_info')
 
+
 @app.before_request
 def before_request():
     try:
@@ -208,12 +271,14 @@ def before_request():
         import traceback; traceback.print_exc()
         g.conn = None
 
+
 @app.teardown_request
 def teardown_request(exception):
     try:
         g.conn.close()
     except Exception as e:
         pass
+
 
 if __name__ == "__main__":
     app.secret_key = os.urandom(12)

@@ -5,6 +5,7 @@
 <div class = "home-menu" style="width:20%;float:left;background-color:rgb(230, 228, 228);height: 800px;">
     <div class="app-title">
         <h1>Menu Button</h1>
+        <p> Hello, Dear user {{userid}}</p>
     </div>
     <div>
         <form action="/basic_info" method="POST">
@@ -38,6 +39,43 @@
     </div>
 
 </div>
-<div style="width: 80%;float:right;background-color:aquamarine;height: 800px;"> </div>
+<div style="width: 80%;float:right;background-color:aquamarine;height: 800px;"> 
+    <div class="app-title">
+        <h1>Send and See Message</h1>
+    </div>
+    <div class = "show-context-1" style="width: 30%;float:left;">
+        <div class="app-title">
+            <h3>Contact list</h3>
+        </div>
+        {% for n in data %}
+            <div>{{n}}</div>
+        {% endfor %}
+    </div>
+    <div class = "show-context-1" style="width: 70%;float:right;">
+        <div class="app-title">
+            <h3>Message with Contact</h3>
+        </div>
+        {% for n in data2 %}
+            <div>{{n}}</div>
+        {% endfor %}
+    </div>
+    <hr class="home_hr">
+    <div style="width: 50%;float:left;">
+        <form action="/show_message" method="POST">
+            <div class = "submit-context">
+                <p><strong>End User id to show message:</strong> </p><input type="text" class="login-field" value="" placeholder="user_id" name="user_id">
+                <input type="submit" value="Show Message" class="btn btn-primary btn-large btn-block">
+            </div>
+        </form>
+    </div>
+    <div style="width: 50%;float:right;">
+        <form action="/send_message" method="POST">
+            <div class = "submit-context">
+                <p><strong> Send Message to User:</strong></p> <input type="text" class="login-field" value="" placeholder="message" name="message">
+                <input type="submit" value="Send Message" class="btn btn-primary btn-large btn-block">
+            </div>
+        </form>
+    </div>
+</div>
 
 </html>
