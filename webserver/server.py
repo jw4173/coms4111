@@ -154,6 +154,14 @@ def find_roommate():
         return redirect('/')
     return render_template("find_roommate.html")
 
+
+@app.route('/post_comment', methods=['POST', 'GET'])
+def post_comment():
+    if not session.get('logged_in'):
+        return redirect('/')
+    return render_template("post_comment.html")
+
+
 @app.route('/message', methods=['POST', 'GET'])
 def message():
     if not session.get('logged_in'):
@@ -215,6 +223,19 @@ def message():
 def show_message():
     if request.form['user_id']:
         session['user_id_message'] = request.form['user_id']
+    return redirect('/message')
+
+
+@app.route('/send_message', methods=['POST', 'GET'])
+def send_message():
+    if request.form['message'] and session.get('userid') and session.get('user_id_message'):
+        # find max message id
+        cmd = 'SELECT MAX(message_id) FROM Message_Send_Receive'
+        cursor = g.conn.execute(text(cmd))
+        max_message_id = next(cursor)[0]+1
+        cursor.close()
+        cmd = 'INSERT INTO Message_Send_Receive VALUES ((:message_id), (:user_id), (:to_id), (:context));'
+        g.conn.execute(text(cmd), message_id=max_message_id, user_id = session.get('userid'), to_id=session.get('user_id_message'), context=request.form['message'])
     return redirect('/message')
 
 @app.route('/basic_info', methods=['POST', 'GET'])
